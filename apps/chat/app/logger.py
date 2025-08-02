@@ -1,6 +1,6 @@
 import logging
 from contextvars import ContextVar
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 from opentelemetry import trace
 import structlog
 
@@ -30,21 +30,23 @@ class EnrichedLogger:
     
     def bind(self, **kwargs) -> 'EnrichedLogger':
         """Добавляет контекст к логгеру."""
-        return EnrichedLogger(self.logger.bind(**kwargs))
+        # Приводим к нужному типу для MyPy
+        bound_logger = cast(structlog.BoundLogger, self.logger.bind(**kwargs))
+        return EnrichedLogger(bound_logger)
     
-    def info(self, msg: str, **kwargs):
+    def info(self, msg: str, **kwargs) -> None:
         kwargs = self._add_trace_context(kwargs)
         self.logger.info(msg, **kwargs)
     
-    def error(self, msg: str, **kwargs):
+    def error(self, msg: str, **kwargs) -> None:
         kwargs = self._add_trace_context(kwargs)
         self.logger.error(msg, **kwargs)
     
-    def warning(self, msg: str, **kwargs):
+    def warning(self, msg: str, **kwargs) -> None:
         kwargs = self._add_trace_context(kwargs)
         self.logger.warning(msg, **kwargs)
     
-    def debug(self, msg: str, **kwargs):
+    def debug(self, msg: str, **kwargs) -> None:
         kwargs = self._add_trace_context(kwargs)
         self.logger.debug(msg, **kwargs)
 
@@ -74,9 +76,12 @@ def enrich_context(**kwargs) -> EnrichedLogger:
     Создает логгер с обогащенным контекстом.
     Совместимо с существующим кодом.
     """
-    return EnrichedLogger(base_logger.bind(**kwargs))
+    # Приводим к нужному типу для MyPy
+    bound_logger = cast(structlog.BoundLogger, base_logger.bind(**kwargs))
+    return EnrichedLogger(bound_logger)
 
-def set_request_context(**kwargs):
+
+def set_request_context(**kwargs) -> None:
     """
     Устанавливает контекст для всего request.
     Используется в middleware или в начале обработки запроса.

@@ -10,7 +10,7 @@ class ChatService:
     ChatService инкапсулирует бизнес-логику чата.
     """
 
-    def __init__(self, llm_client: OpenRouterClient = None):
+    def __init__(self, llm_client: Optional[OpenRouterClient] = None):
         self.llm_client = llm_client or OpenRouterClient()
         enrich_context(event="chat_service_init").info("Chat service initialized")
 

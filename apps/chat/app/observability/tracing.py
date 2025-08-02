@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict, Any
 from opentelemetry import trace
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.sdk.resources import Resource
@@ -11,6 +12,19 @@ from opentelemetry._logs import set_logger_provider
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+
+
+def server_request_hook(span, scope: Dict[str, Any]) -> None:
+    """Кастомный hook для обогащения spans атрибутами."""
+    if path := scope.get("path"):
+        span.set_attribute("http.url.path", path)
+    
+    if query_string := scope.get("query_string"):
+        span.set_attribute("http.url.query", query_string.decode())
+    
+    if event_type := scope.get("type"):
+        span.set_attribute("asgi.event_type", event_type)
+
 
 def setup_tracing(app) -> None:
     """
@@ -93,8 +107,9 @@ def setup_tracing(app) -> None:
     # JSON logging для production
     if os.getenv("ENVIRONMENT") == "production":
         import json
+        
         class JSONFormatter(logging.Formatter):
-            def format(self, record):
+            def format(self, record: logging.LogRecord) -> str:
                 log_obj = {
                     "timestamp": self.formatTime(record),
                     "level": record.levelname,
@@ -107,8 +122,11 @@ def setup_tracing(app) -> None:
                 span = trace.get_current_span()
                 if span.is_recording():
                     ctx = span.get_span_context()
-                    log_obj["trace_id"] = format(ctx.trace_id, '032x')
-                    log_obj["span_id"] = format(ctx.span_id, '016x')
+                    # Приводим к нужным типам для MyPy
+                    trace_id: int = ctx.trace_id
+                    span_id: int = ctx.span_id
+                    log_obj["trace_id"] = format(trace_id, '032x')
+                    log_obj["span_id"] = format(span_id, '016x')
                 return json.dumps(log_obj)
         
         console_handler = logging.StreamHandler()
@@ -126,12 +144,7 @@ def setup_tracing(app) -> None:
     FastAPIInstrumentor().instrument_app(
         app, 
         tracer_provider=provider,
-        # Кастомные атрибуты
-        server_request_hook=lambda span, scope: span.set_attributes({
-            "http.url.path": scope.get("path"),
-            "http.url.query": scope.get("query_string", b"").decode(),
-            "asgi.event_type": scope.get("type"),
-        })
+        server_request_hook=server_request_hook
     )
     
     # Log успешной инициализации

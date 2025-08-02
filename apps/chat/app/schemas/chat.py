@@ -1,33 +1,21 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 from typing import List, Optional
 
-
-# ----------------------------------------
-# 📌 Роли сообщений
-# ----------------------------------------
 class Role(str, Enum):
     user = "user"
     assistant = "assistant"
     system = "system"
 
-# ----------------------------------------
-# 📌 Базовое сообщение
-# ----------------------------------------
 class Message(BaseModel):
-    role: Role = Field(..., example="user")
-    content: str = Field(..., example="Hello")
+    role: Role = Field(..., examples=["user"])
+    content: str = Field(..., examples=["Hello"])
 
-# ----------------------------------------
-# 📌 Структура запроса и ответа чата
-# ----------------------------------------
 class ChatRequest(BaseModel):
-    messages: List[Message] = Field(..., example=[{"role": "user", "content": "Hi"}])
-    user_api_key: Optional[str] = Field(None, alias="userApiKey", example="sk-...")
-
-    class Config:
-        allow_population_by_field_name = True
+    model_config = ConfigDict(populate_by_name=True)
+    
+    messages: List[Message] = Field(..., examples=[[{"role": "user", "content": "Hi"}]])
+    user_api_key: Optional[str] = Field(None, alias="userApiKey", examples=["sk-..."])
 
 class ChatResponse(BaseModel):
-    reply: str = Field(..., example="Hello from AI")
-
+    reply: str = Field(..., examples=["Hello from AI"])

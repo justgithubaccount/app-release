@@ -1,0 +1,33 @@
+name: Python Tests
+on:
+  # push:
+  #   paths: ['apps/chat/**']
+  pull_request:
+    paths: ['apps/chat/**']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/chat
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio pytest-cov mypy ruff
+      - name: Run tests
+        env:
+          OTEL_SDK_DISABLED: true
+        run: |
+          export PYTHONPATH=.
+          pytest --cov=app tests/
+      - name: Type check
+        run: mypy app --ignore-missing-imports
+      - name: Lint
+        run: ruff check app
