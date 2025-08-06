@@ -5,12 +5,16 @@ metadata:
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "5"
+
     argocd-image-updater.argoproj.io/image-list: chat=ghcr.io/justgithubaccount/chat-api
     argocd-image-updater.argoproj.io/chat.update-strategy: semver:~1.0
-    # ~1.1 = только 1.1.x (patch updates)
-    # ^1.1 = любые 1.x.x (minor updates)  
-    # latest = всегда последний тег
     argocd-image-updater.argoproj.io/chat.helm.image-tag: image.tag
+
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-target: infra/clusters/dev/chat-values.yaml
+    argocd-image-updater.argoproj.io/write-back-target-branch: main
+    argocd-image-updater.argoproj.io/git-commit-user-name: justgithubaccount
+    argocd-image-updater.argoproj.io/git-commit-user-email: kulikovyevgeny@outlook.com
 spec:
   project: default
   source:
@@ -19,14 +23,17 @@ spec:
     path: charts/chat
     helm:
       valueFiles:
-        - values.yaml  # Дефолтные values из чарта
-        - ../../infra/clusters/dev/chat-values.yaml  # overlay для dev
+        - values.yaml
+        - ../../infra/clusters/dev/chat-values.yaml
   destination:
-    name: CLUSTER  # Будет заменено Kustomize
+    name: CLUSTER
     namespace: chat-api
   syncPolicy:
     automated:
+      allowEmpty: true
       selfHeal: true
       prune: true
     syncOptions:
+      - Validate=true
       - CreateNamespace=true
+      - PruneLast=true
