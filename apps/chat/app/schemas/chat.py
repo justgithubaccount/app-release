@@ -14,7 +14,12 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     
-    messages: List[Message] = Field(..., examples=[[{"role": "user", "content": "Hi"}]])
+    messages: List[Message] = Field(
+        ...,
+        min_length=1,
+        examples=[[{"role": "user", "content": "Hi"}]],
+        description="At least one message must be provided.",
+    )
     user_api_key: Optional[str] = Field(None, alias="userApiKey", examples=["sk-..."])
 
 class ChatResponse(BaseModel):
