@@ -55,7 +55,7 @@ def create_app() -> FastAPI:
    async def load_crew():
        enrich_context(event="startup_crew_start").info("Starting crew loading")
        try:
-           yaml_path = os.path.join(os.path.dirname(__file__), "infra_cluster.yaml")
+           yaml_path = os.path.join(os.path.dirname(__file__), "..", "crew-infra-cluster.yaml")
            if os.path.exists(yaml_path):
                app.state.crew = Crew.load(yaml_path)
                enrich_context(event="crew_loaded", file=yaml_path).info("Crew loaded from YAML")
