@@ -2,10 +2,10 @@ name: Build and Release
 on:
   push:
     branches: [main]
-    paths:
-      - 'apps/chat/**'
-      - '.github/workflows/release.yaml'
-      - '.releaserc.json'
+    # paths:
+    #   - 'apps/chat/**'
+    #   - '.github/workflows/release.yaml'
+    #   - '.releaserc.json'
 
 jobs:
   build-and-release:

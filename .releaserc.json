@@ -1,9 +1,15 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main",
+    {"name": "beta", "prerelease": true},
+    {"name": "alpha", "prerelease": true}
+  ],
+  "repositoryUrl": "https://github.com/justgithubaccount/app-release",
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
       {
+        "preset": "conventionalcommits",
         "releaseRules": [
           {"type": "feat", "release": "minor"},
           {"type": "fix", "release": "patch"},
@@ -12,25 +18,73 @@
           {"type": "docs", "release": "patch"},
           {"type": "style", "release": "patch"},
           {"type": "refactor", "release": "patch"},
-          {"type": "tst", "release": "patch"},
-          {"type": "tst-cd", "release": "patch"},
-          {"type": "tst-ci", "release": "patch"},
+          {"type": "test", "release": "patch"},
           {"type": "ci", "release": "patch"},
           {"type": "chore", "release": "patch"},
+          {"type": "build", "release": "patch"},
           {"breaking": true, "release": "major"}
-        ]
+        ],
+        "parserOpts": {
+          "noteKeywords": ["BREAKING CHANGE", "BREAKING CHANGES", "BREAKING"]
+        }
       }
     ],
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {"type": "feat", "section": "🚀 Features"},
+            {"type": "fix", "section": "🐛 Bug Fixes"},
+            {"type": "perf", "section": "⚡ Performance Improvements"},
+            {"type": "revert", "section": "⏪ Reverts"},
+            {"type": "docs", "section": "📚 Documentation"},
+            {"type": "style", "section": "💄 Styles"},
+            {"type": "refactor", "section": "♻️ Code Refactoring"},
+            {"type": "test", "section": "✅ Tests"},
+            {"type": "ci", "section": "🔧 CI/CD"},
+            {"type": "chore", "section": "🏗️ Chores"},
+            {"type": "build", "section": "📦 Build System"}
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false
+      }
+    ],
     [
       "@semantic-release/github",
       {
         "assets": [
           {
-            "path": "chat-*.tgz",
+            "path": "charts/chat/chat-*.tgz",
             "label": "Helm Chart"
+          },
+          {
+            "path": "CHANGELOG.md",
+            "label": "Changelog"
           }
         ]
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "package.json"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]
   ]
